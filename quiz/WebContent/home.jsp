@@ -13,7 +13,6 @@
        <h1 class="logo"><img src="pictures/ets-logo.jpg"></h1>
     </div>
  </header>
- 変更用
   <div style="text-align: center">
   <c:if test="${currentUser.dailyMaxScore != null }">
      <p>本日の最高スコア：${currentUser.dailyMaxScore }</p>
