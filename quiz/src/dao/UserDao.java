@@ -229,8 +229,8 @@ public class UserDao {
 												   .collect(Collectors.toList())
 												   .get(6);
 							/*
-							 *  このリストのインデックス6(最大スコアかつ最新日付)をweeklyupddt、
-							 *  スコアをweeklymaxscoreとして格納する
+							 *  このリストのインデックス6(最大スコアかつ最新日付)のValueをweeklyupddt、
+							 *  Keyをweeklymaxscoreとして格納する
 							 */
 							ps3.setTimestamp(1, entry.getValue());
 							ps3.setInt(2, weeklyMaxScore);
