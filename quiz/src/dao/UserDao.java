@@ -27,20 +27,20 @@ public class UserDao {
 	//ログイン時ユーザー取得
 	private static final String USERSELECTBYID = "select * from users where id = ?";
 	//ログインユーザー週間ランキング(順位)取得
-	private static final String WEEKLYRANKSELECT = "select count(distinct weeklymaxscore) " 
-		    									  +"from users where weeklymaxscore >= ? ";
+	private static final String WEEKLYRANKSELECT = "select count(distinct weeklymaxscore) "
+	                                              +"from users where weeklymaxscore >= ? ";
 	//ログインユーザー日間ランキング(順位)取得
-	private static final String DAILYRANKSELECT = "select count(distinct dailymaxscore) " 
+	private static final String DAILYRANKSELECT = "select count(distinct dailymaxscore) "
 												 +"from users where dailymaxscore >= ? ";
-	//週間ランキングユーザー取得 
+	//週間ランキングユーザー取得
 	private static final String WEEKLYSELECT = "select * from users where weeklyupddt is not null";
 	//日間ランキングユーザー取得
 	private static final String DAILYSELECT = "select * from users where to_char(upddt,'YYYY-MM-DD') = ?";
 	// 本日日付のユーザー最大スコア取得(本日の記録なし→0カラム)
-	private static final String DAILYMAXSELECT = "select dailymaxscore " 
+	private static final String DAILYMAXSELECT = "select dailymaxscore "
 												+"from users where (to_char(upddt,'YYYY-MM-DD') = ?) and id = ?";
 	// 本日日付＋特定曜日のスコア更新処理
-	private static final String MONDAILYANDDATEUPDATE = "update users " 
+	private static final String MONDAILYANDDATEUPDATE = "update users "
 													   +"set dailymaxscore = ?,monscore = ?,mondt = now(),upddt = now() "
 													   +"where id = ?";
 	private static final String TUEDAILYANDDATEUPDATE = "update users set dailymaxscore = ?,"
@@ -303,7 +303,7 @@ public class UserDao {
 			return -1;
 		}
 	}
-	//週間ランキングユーザー取得 
+	//週間ランキングユーザー取得
 			public List<User> getWeeklyUser() {
 				try(Connection con = ConnectionGetter.getConnection();
 					PreparedStatement ps = con.prepareStatement(WEEKLYSELECT);
