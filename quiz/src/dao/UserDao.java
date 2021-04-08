@@ -37,23 +37,23 @@ public class UserDao {
 	//日間ランキングユーザー取得
 	private static final String DAILYSELECT = "select * from users where to_char(upddt,'YYYY-MM-DD') = ?";
 	// 本日日付のユーザー最大スコア取得(本日の記録なし→0カラム)
-	private static final String DAILYMAXSELECT = "select dailymaxscore "
-	                                            +"from users where (to_char(upddt,'YYYY-MM-DD') = ?) and id = ?";
+	private static final String DAILYMAXSELECT =
+			"select dailymaxscore from users where (to_char(upddt,'YYYY-MM-DD') = ?) and id = ?";
 	// 本日日付＋特定曜日のスコア更新処理
-	private static final String MONDAILYANDDATEUPDATE = "update users set dailymaxscore = ?,"
-	                                                   +"monscore = ?,mondt = now(),upddt = now() where id = ?";
-	private static final String TUEDAILYANDDATEUPDATE = "update users set dailymaxscore = ?,"
-	                                                   +"tuescore = ?,tuedt = now(),upddt = now() where id = ?";
-	private static final String WEDDAILYANDDATEUPDATE = "update users set dailymaxscore = ?,"
-	                                                   +"wedscore = ?,weddt = now(),upddt = now() where id = ?";
-	private static final String THUDAILYANDDATEUPDATE =	"update users set dailymaxscore = ?,"
-	                                                   +"thuscore = ?,thudt = now(),upddt = now() where id = ?";
-	private static final String FRIDAILYANDDATEUPDATE = "update users set dailymaxscore = ?,"
-	                                                   +"friscore = ?,fridt = now(),upddt = now() where id = ?";
-	private static final String SURDAILYANDDATEUPDATE = "update users set dailymaxscore = ?,"
-	                                                   +"surscore = ?,surdt = now(),upddt = now() where id = ?";
-	private static final String SUNDAILYANDDATEUPDATE = "update users set dailymaxscore = ?,"
-                                                       +"sunscore = ?,sundt = now(),upddt = now() where id = ?";
+	private static final String MONDAILYANDDATEUPDATE =
+			"update users set dailymaxscore = ?,monscore = ?,mondt = now(),upddt = now() where id = ?";
+	private static final String TUEDAILYANDDATEUPDATE =
+			"update users set dailymaxscore = ?,tuescore = ?,tuedt = now(),upddt = now() where id = ?";
+	private static final String WEDDAILYANDDATEUPDATE =
+			"update users set dailymaxscore = ?,wedscore = ?,weddt = now(),upddt = now() where id = ?";
+	private static final String THUDAILYANDDATEUPDATE =
+			"update users set dailymaxscore = ?,thuscore = ?,thudt = now(),upddt = now() where id = ?";
+	private static final String FRIDAILYANDDATEUPDATE =
+			"update users set dailymaxscore = ?,friscore = ?,fridt = now(),upddt = now() where id = ?";
+	private static final String SURDAILYANDDATEUPDATE =
+			"update users set dailymaxscore = ?,surscore = ?,surdt = now(),upddt = now() where id = ?";
+	private static final String SUNDAILYANDDATEUPDATE =
+			"update users set dailymaxscore = ?,sunscore = ?,sundt = now(),upddt = now() where id = ?";
 	// 週間最大スコア、週間スコア更新日付更新処理
 	private static final String WEEKLYMAXUPDATE = "update users set weeklymaxscore = ?,weeklyupddt = now() where id = ?";
 	// 週間最大スコア、週間スコア更新日付削除処理
