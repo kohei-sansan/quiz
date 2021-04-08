@@ -293,11 +293,7 @@ public class UserDao {
 			ps.setString(1, id);
 			//idが一致していれば抽出
 			ResultSet rs = ps.executeQuery();
-			// デバッグ用　
-			String pass2 = password;
 			if(rs.next()) {
-				// デバッグ用　
-				String pass = rs.getString("password");
 				//パスワードまで一致していればエンティティとしてNewする
 				if(rs.getString("password").equals(password)) {
 					user = new User(rs.getString("id")
@@ -502,110 +498,6 @@ public class UserDao {
 		}catch(SQLException e) {
 			e.printStackTrace();
 			return -1;
-		}
-	}
-	//週間ランキングユーザー取得 ※現在使用しない
-	public List<User> getWeeklyUsers() {
-		try(Connection con = ConnectionGetter.getConnection();
-			PreparedStatement ps = con.prepareStatement(WEEKLYSELECT)){
-			//ランキング一覧用のリスト
-			List<User> weeklyUserList = new ArrayList<>();
-			//リスト格納用のユーザーオブジェクト
-			User user = null;
-
-			ResultSet rs = ps.executeQuery();
-
-			while(rs.next()) {
-				user = new User(rs.getString("id")
-						       ,rs.getString("password")
-						       ,rs.getString("name")
-						       ,rs.getInt("weeklymaxscore")
-						       ,rs.getInt("dailymaxscore")
-						       ,rs.getInt("monscore")
-						       ,rs.getTimestamp("mondt")
-						       ,rs.getInt("tuescore")
-						       ,rs.getTimestamp("tuedt")
-						       ,rs.getInt("wedscore")
-						       ,rs.getTimestamp("weddt")
-						       ,rs.getInt("thuscore")
-						       ,rs.getTimestamp("thudt")
-						       ,rs.getInt("friscore")
-						       ,rs.getTimestamp("fridt")
-						       ,rs.getInt("surscore")
-						       ,rs.getTimestamp("surdt")
-						       ,rs.getInt("sunscore")
-						       ,rs.getTimestamp("sundt")
-						       ,rs.getTimestamp("upddt")
-						       ,rs.getTimestamp("weeklyupddt"));
-
-				weeklyUserList.add(user);
-			}
-			//それぞれの週のスコア更新日時が1週間以内でない場合、スコアを-1に設定する処理
-			LocalDate minus6Date = LocalDate.now().minusDays(6);
-			LocalDate tmpDate = null;
-			for(User u:weeklyUserList) {
-				tmpDate = LocalDate.from(u.getMonDt().toLocalDateTime());
-				if(tmpDate.isBefore(minus6Date)){
-					u.setMonScore(-1);
-				}
-				tmpDate = LocalDate.from(u.getTueDt().toLocalDateTime());
-				if(tmpDate.isBefore(minus6Date)){
-					u.setTueScore(-1);
-				}
-				tmpDate = LocalDate.from(u.getWedDt().toLocalDateTime());
-				if(tmpDate.isBefore(minus6Date)){
-					u.setWedScore(-1);
-				}
-				tmpDate = LocalDate.from(u.getThuDt().toLocalDateTime());
-				if(tmpDate.isBefore(minus6Date)){
-					u.setThuScore(-1);
-				}
-				tmpDate = LocalDate.from(u.getFriDt().toLocalDateTime());
-				if(tmpDate.isBefore(minus6Date)){
-					u.setFriScore(-1);
-				}
-				tmpDate = LocalDate.from(u.getSurDt().toLocalDateTime());
-				if(tmpDate.isBefore(minus6Date)){
-					u.setSurScore(-1);
-				}
-				tmpDate = LocalDate.from(u.getSunDt().toLocalDateTime());
-				if(tmpDate.isBefore(minus6Date)){
-					u.setSunScore(-1);
-				}
-			}
-			//現在の週の最大スコアを抽出後、weeklyMaxScoreフィールドに格納
-			weeklyUserList.forEach(u->{
-				int weeklyMax = IntStream.of(u.getMonScore(),u.getTueScore()
-						    ,u.getWedScore(),u.getThuScore()
-						    ,u.getFriScore(),u.getSurScore()
-						    ,u.getSunScore())
-				.max()
-				.getAsInt();
-
-				u.setWeeklyMaxScore(weeklyMax);
-			});
-			//週間スコアの降順(その後にユーザー名の昇順にする)にソートして返す
-			Collections.sort(weeklyUserList
-							,Comparator.comparing(User::getWeeklyMaxScore)
-							 					  .reversed()
-							 					  .thenComparing(User::getUserName));
-			//ランク抽出処理 tmpRankは0、1、2とカウントアップ
-			//tmpScore(スコア)が下がるにつれ、tmpRank(順位)は増える
-			int tmpRank = 0;
-			int tmpScore = 11;
-
-			for(User u:weeklyUserList) {
-				if(u.getWeeklyMaxScore() < tmpScore) {
-					tmpScore = u.getWeeklyMaxScore();
-					u.setWeeklyRank(++tmpRank);
-				}else {
-					u.setWeeklyRank(tmpRank);
-				}
-			}
-			return weeklyUserList;
-		}catch(SQLException e) {
-			e.printStackTrace();
-			return null;
 		}
 	}
 	//日間ランキングユーザー取得
