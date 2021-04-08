@@ -31,54 +31,47 @@ public class UserDao {
 	                                              +"from users where weeklymaxscore >= ? ";
 	//ログインユーザー日間ランキング(順位)取得
 	private static final String DAILYRANKSELECT = "select count(distinct dailymaxscore) "
-												 +"from users where dailymaxscore >= ? ";
+	                                             +"from users where dailymaxscore >= ? ";
 	//週間ランキングユーザー取得
 	private static final String WEEKLYSELECT = "select * from users where weeklyupddt is not null";
 	//日間ランキングユーザー取得
 	private static final String DAILYSELECT = "select * from users where to_char(upddt,'YYYY-MM-DD') = ?";
 	// 本日日付のユーザー最大スコア取得(本日の記録なし→0カラム)
 	private static final String DAILYMAXSELECT = "select dailymaxscore "
-												+"from users where (to_char(upddt,'YYYY-MM-DD') = ?) and id = ?";
+	                                            +"from users where (to_char(upddt,'YYYY-MM-DD') = ?) and id = ?";
 	// 本日日付＋特定曜日のスコア更新処理
 	private static final String MONDAILYANDDATEUPDATE = "update users "
-													   +"set dailymaxscore = ?,monscore = ?,mondt = now(),upddt = now() "
-													   +"where id = ?";
+	                                                   +"set dailymaxscore = ?,monscore = ?,mondt = now(),upddt = now() "
+	                                                   +"where id = ?";
 	private static final String TUEDAILYANDDATEUPDATE = "update users set dailymaxscore = ?,"
-													   +"tuescore = ?,tuedt = now(),upddt = now() where id = ?";
+	                                                   +"tuescore = ?,tuedt = now(),upddt = now() where id = ?";
 	private static final String WEDDAILYANDDATEUPDATE = "update users set dailymaxscore = ?,"
-													   +"wedscore = ?,weddt = now(),upddt = now() where id = ?";
+	                                                   +"wedscore = ?,weddt = now(),upddt = now() where id = ?";
 	private static final String THUDAILYANDDATEUPDATE =	"update users set dailymaxscore = ?,"
-													   +"thuscore = ?,thudt = now(),upddt = now() where id = ?";
+	                                                   +"thuscore = ?,thudt = now(),upddt = now() where id = ?";
 	private static final String FRIDAILYANDDATEUPDATE = "update users set dailymaxscore = ?,"
-													   +"friscore = ?,fridt = now(),upddt = now() where id = ?";
+	                                                   +"friscore = ?,fridt = now(),upddt = now() where id = ?";
 	private static final String SURDAILYANDDATEUPDATE = "update users set dailymaxscore = ?,"
-													   +"surscore = ?,surdt = now(),upddt = now() where id = ?";
-	private static final String SUNDAILYANDDATEUPDATE =
-			"update users set dailymaxscore = ?,"
-		   +"sunscore = ?,sundt = now(),upddt = now() where id = ?";
+	                                                   +"surscore = ?,surdt = now(),upddt = now() where id = ?";
+	private static final String SUNDAILYANDDATEUPDATE = "update users set dailymaxscore = ?,"
+                                                       +"sunscore = ?,sundt = now(),upddt = now() where id = ?";
 	// 週間最大スコア、週間スコア更新日付更新処理
-	private static final String WEEKLYMAXUPDATE =
-			"update users set weeklymaxscore = ?,"
-		   +"weeklyupddt = now() where id = ?";
+	private static final String WEEKLYMAXUPDATE = "update users set weeklymaxscore = ?,weeklyupddt = now() where id = ?";
 	// 週間最大スコア、週間スコア更新日付削除処理
-	private static final String DELETEWEEKLYDATA =
-			"update users set weeklyupddt = null,weeklymaxscore = null where id = ?";
+	private static final String DELETEWEEKLYDATA = "update users set weeklyupddt = null,weeklymaxscore = null where id = ?";
 	// 週間スコア、更新日付更新
-	private static final String UPDATEWEEKLYDATA =
-			"update users set weeklyupddt = ?,weeklymaxscore = ? where id = ?";
+	private static final String UPDATEWEEKLYDATA = "update users set weeklyupddt = ?,weeklymaxscore = ? where id = ?";
 	//ユーザー登録処理
 	public int userInsert(String id,String password,String name) {
 		try(Connection con = ConnectionGetter.getConnection();
 			PreparedStatement ps = con.prepareStatement(USERINSERT)){
 			//結果用変数
 			int result = 0;
-
 			ps.setString(1, id);
 			ps.setString(2, password);
 			ps.setString(3, name);
 			//インサートした結果(期待される結果==1)をセット
 			result = ps.executeUpdate();
-
 			return result;
 		}catch(SQLException e) {
 			e.printStackTrace();
@@ -126,16 +119,16 @@ public class UserDao {
 				}
 				// 週間最大スコア集計し直し
 				LocalDate today = LocalDate.now();
+				// 1週間以内にクイズ実施、またはクイズ実施後1週間以上のログインなし
 				if(rs.getTimestamp("weeklyupddt") != null) {
 					LocalDate weeklyUpddt =
 							LocalDate.from(rs.getTimestamp("weeklyupddt").toLocalDateTime());
-					// 週間更新日付が1週間以内ではない場合、セットし直し
+					// 週間最大スコアの記録日付が1週間以内ではない場合、セットし直し
 					if(weeklyUpddt.isBefore(LocalDate.now().minusDays(6))) {
-						// 最後のクイズ実施後の週間スコア日付更新日が失効していた場合、集計し直し
 						//それぞれの週のスコア更新日時が1週間以内でない場合、スコアを-1に設定する処理
 						LocalDate minus6Date = LocalDate.now().minusDays(6);
 						LocalDate tmpDate = null;
-						// それぞれの曜日の更新日がnull → スコアを-1にする
+						// それぞれの曜日の更新日がnull、又は1週間以上前 → スコアを-1にする
 						if(user.getMonDt() != null) {
 							tmpDate = LocalDate.from(user.getMonDt().toLocalDateTime());
 							if(tmpDate.isBefore(minus6Date)){
@@ -207,17 +200,21 @@ public class UserDao {
 										 .max()
 										 .getAsInt();
 						/*
-						 * weeklyMaxScore == -1 → 1週間以上ログインしていない、
+						 * weeklyMaxScore == -1 → 1週間以上テスト未実施かつログインしていない、
 						 * もしくは該当する曜日の採点が初めて、のいずれか
 						 * その場合は週間ランキング情報はN/Aにする
 						 */
 						if(weeklyMaxScore == -1) {
-							// weeklyUpddt、weeklymaxscoreをnullにする処理
+							// weeklyUpddt、weeklymaxscoreをnullにする処理(このメソッド内でこのカラムをチェックするため)
 							ps2.setString(1, id);
 							ps2.executeUpdate();
-							// オブジェクトに格納
+							// オブジェクトにも格納(N/Aと表示するため)
 							user.setWeeklyMaxScore(null);
 						}else {
+							/*
+							 *  weeklyMaxScore != -1 → 1週間以内に記録したスコアあり
+							 *  → 1週間以内の最大スコアかつ、最新日付のマッピング１組を取得
+							 */
 							Map<Integer,Timestamp> map = new HashMap<>();
 							map.put(user.getMonScore(), user.getMonDt());
 							map.put(user.getTueScore(), user.getTueDt());
@@ -304,251 +301,251 @@ public class UserDao {
 		}
 	}
 	//週間ランキングユーザー取得
-			public List<User> getWeeklyUser() {
-				try(Connection con = ConnectionGetter.getConnection();
-					PreparedStatement ps = con.prepareStatement(WEEKLYSELECT);
-					PreparedStatement ps2 = con.prepareStatement(DELETEWEEKLYDATA);
-					PreparedStatement ps3 = con.prepareStatement(UPDATEWEEKLYDATA)){
-					// 返却用UserList
-					List<User> uList = new ArrayList<>();
-					// 格納用Userオブジェクト
-					User user = null;
-					ResultSet rs = ps.executeQuery();
+	public List<User> getWeeklyUser() {
+		try(Connection con = ConnectionGetter.getConnection();
+			PreparedStatement ps = con.prepareStatement(WEEKLYSELECT);
+			PreparedStatement ps2 = con.prepareStatement(DELETEWEEKLYDATA);
+			PreparedStatement ps3 = con.prepareStatement(UPDATEWEEKLYDATA)){
+			// 返却用UserList
+			List<User> uList = new ArrayList<>();
+			// 格納用Userオブジェクト
+			User user = null;
+			ResultSet rs = ps.executeQuery();
 
-					while(rs.next()) {
-						// 週間最大スコア格納用変数
-						int weeklyMaxScore = -1;
-							user = new User(rs.getString("id")
-										   ,rs.getString("password")
-										   ,rs.getString("name")
-										   ,rs.getInt("weeklymaxscore")
-										   ,rs.getInt("dailymaxscore")
-										   ,rs.getInt("monscore")
-										   ,rs.getTimestamp("mondt")
-										   ,rs.getInt("tuescore")
-										   ,rs.getTimestamp("tuedt")
-										   ,rs.getInt("wedscore")
-										   ,rs.getTimestamp("weddt")
-										   ,rs.getInt("thuscore")
-										   ,rs.getTimestamp("thudt")
-										   ,rs.getInt("friscore")
-										   ,rs.getTimestamp("fridt")
-										   ,rs.getInt("surscore")
-										   ,rs.getTimestamp("surdt")
-										   ,rs.getInt("sunscore")
-										   ,rs.getTimestamp("sundt")
-										   ,rs.getTimestamp("upddt")
-									       ,rs.getTimestamp("weeklyupddt"));
+			while(rs.next()) {
+				// 週間最大スコア格納用変数
+				int weeklyMaxScore = -1;
+					user = new User(rs.getString("id")
+								   ,rs.getString("password")
+								   ,rs.getString("name")
+								   ,rs.getInt("weeklymaxscore")
+								   ,rs.getInt("dailymaxscore")
+								   ,rs.getInt("monscore")
+								   ,rs.getTimestamp("mondt")
+								   ,rs.getInt("tuescore")
+								   ,rs.getTimestamp("tuedt")
+								   ,rs.getInt("wedscore")
+								   ,rs.getTimestamp("weddt")
+								   ,rs.getInt("thuscore")
+								   ,rs.getTimestamp("thudt")
+								   ,rs.getInt("friscore")
+								   ,rs.getTimestamp("fridt")
+								   ,rs.getInt("surscore")
+								   ,rs.getTimestamp("surdt")
+								   ,rs.getInt("sunscore")
+								   ,rs.getTimestamp("sundt")
+								   ,rs.getTimestamp("upddt")
+							       ,rs.getTimestamp("weeklyupddt"));
 
-							LocalDate weeklyUpddt =
-									LocalDate.from(rs.getTimestamp("weeklyupddt").toLocalDateTime());
-							// 週間最大スコア記録日付更新し直し
-							if(weeklyUpddt.isBefore(LocalDate.now().minusDays(6))){
-								//それぞれの週のスコア更新日時が1週間以内でない場合、スコアを-1に設定する処理
-								LocalDate minus6Date = LocalDate.now().minusDays(6);
-								LocalDate tmpDate = null;
-								if(user.getMonDt() != null) {
-									tmpDate = LocalDate.from(user.getMonDt().toLocalDateTime());
-									if(tmpDate.isBefore(minus6Date)){
-										user.setMonScore(-1);
-									}
-								}else {
-									user.setMonScore(-1);
-									user.setMonDt(new Timestamp(System.currentTimeMillis()));
-								}
-								if(user.getTueDt() != null) {
-									tmpDate = LocalDate.from(user.getTueDt().toLocalDateTime());
-									if(tmpDate.isBefore(minus6Date)){
-										user.setTueScore(-1);
-									}
-								}else {
-									user.setTueScore(-1);
-									user.setTueDt(new Timestamp(System.currentTimeMillis()));
-								}
-								if(user.getWedDt() != null) {
-									tmpDate = LocalDate.from(user.getWedDt().toLocalDateTime());
-									if(tmpDate.isBefore(minus6Date)){
-										user.setWedScore(-1);
-									}
-								}else {
-									user.setWedScore(-1);
-									user.setWedDt(new Timestamp(System.currentTimeMillis()));
-								}
-								if(user.getThuDt() != null) {
-									tmpDate = LocalDate.from(user.getThuDt().toLocalDateTime());
-									if(tmpDate.isBefore(minus6Date)){
-										user.setThuScore(-1);
-									}
-								}else {
-									user.setThuScore(-1);
-									user.setThuDt(new Timestamp(System.currentTimeMillis()));
-								}
-								if(user.getFriDt() != null) {
-									tmpDate = LocalDate.from(user.getFriDt().toLocalDateTime());
-									if(tmpDate.isBefore(minus6Date)){
-										user.setFriScore(-1);
-									}
-								}else {
-									user.setFriScore(-1);
-									user.setFriDt(new Timestamp(System.currentTimeMillis()));
-								}
-								if(user.getSurDt() != null) {
-									tmpDate = LocalDate.from(user.getSurDt().toLocalDateTime());
-									if(tmpDate.isBefore(minus6Date)){
-										user.setSurScore(-1);
-									}
-								}else {
-									user.setSurScore(-1);
-									user.setSurDt(new Timestamp(System.currentTimeMillis()));
-								}
-								if(user.getSunDt() != null) {
-									tmpDate = LocalDate.from(user.getSunDt().toLocalDateTime());
-									if(tmpDate.isBefore(minus6Date)){
-										user.setSunScore(-1);
-									}
-								}else {
-									user.setSunScore(-1);
-									user.setSunDt(new Timestamp(System.currentTimeMillis()));
-								}
-								// ユーザーの週間最大スコア取得
-								weeklyMaxScore = IntStream.of(user.getMonScore(),user.getTueScore(),
-															  user.getWedScore(),user.getThuScore(),
-															  user.getFriScore(),user.getSurScore(),
-															  user.getSunScore())
-												 .max()
-												 .getAsInt();
-								/*
-								 * weeklyMaxScore == -1 → 1週間以上ログインしていない、
-								 * もしくは該当する曜日の採点が初めて、のいずれか
-								 * その場合はweeklyUpddt、weeklymaxscoreをnullにする
-								 */
-								if(weeklyMaxScore == -1) {
-									// weeklyUpddt、weeklymaxscoreをnullにする処理
-									ps2.setString(1, user.getId());
-									ps2.executeUpdate();
-									// ユーザーオブジェクトのデータを無効化
-									user.setWeeklyMaxScore(null);
-								}else {
-									Map<Integer,Timestamp> map = new HashMap<>();
-									map.put(user.getMonScore(), user.getMonDt());
-									map.put(user.getTueScore(), user.getTueDt());
-									map.put(user.getWedScore(), user.getWedDt());
-									map.put(user.getThuScore(), user.getThuDt());
-									map.put(user.getFriScore(), user.getFriDt());
-									map.put(user.getSurScore(), user.getSurDt());
-									map.put(user.getSunScore(), user.getSunDt());
-									Map.Entry<Integer, Timestamp> entry;
-									entry = map.entrySet().stream()
-														   .sorted(Map.Entry.<Integer,Timestamp>comparingByKey()
-																   .thenComparing(Map.Entry.comparingByValue()))
-														   .collect(Collectors.toList())
-														   .get(6);
-									/*
-									 *  このリストのインデックス6(最新日付)をweeklyupddt、
-									 *  スコアをweeklymaxscoreとして格納する
-									 */
-									ps3.setTimestamp(1, entry.getValue());
-									ps3.setInt(2, weeklyMaxScore);
-									ps3.setString(3, user.getId());
-									ps3.executeUpdate();
-									// ユーザーオブジェクトのデータを格納
-									user.setWeeklyMaxScore(weeklyMaxScore);
-									user.setWeeklyUpdDt(entry.getValue());
-								}
+					LocalDate weeklyUpddt =
+							LocalDate.from(rs.getTimestamp("weeklyupddt").toLocalDateTime());
+					// 週間最大スコア記録日付更新し直し
+					if(weeklyUpddt.isBefore(LocalDate.now().minusDays(6))){
+						//それぞれの週のスコア更新日時が1週間以内でない場合、スコアを-1に設定する処理
+						LocalDate minus6Date = LocalDate.now().minusDays(6);
+						LocalDate tmpDate = null;
+						if(user.getMonDt() != null) {
+							tmpDate = LocalDate.from(user.getMonDt().toLocalDateTime());
+							if(tmpDate.isBefore(minus6Date)){
+								user.setMonScore(-1);
 							}
-							// 1週間以内のデータがない場合は除外
-							if(user.getWeeklyMaxScore()==null) {
-								continue;
-							}
-							uList.add(user);
-					}
-					// 順位用一時変数
-					int tmpRank = 0;
-					// 一時スコア変数
-					int tmpScore = 11;
-					// ユーザーリストをスコアの降順の後ユーザー名の昇順にする
-					uList = uList.stream()
-								  .sorted(Comparator.comparing(User::getWeeklyMaxScore)
-										  .reversed()
-										  .thenComparing(User::getUserName))
-								  .collect(Collectors.toList());
-					// 順位格納処理
-					for(User u:uList) {
-						if(tmpScore > u.getWeeklyMaxScore()) {
-							tmpScore = u.getWeeklyMaxScore();
-							u.setWeeklyRank(++tmpRank);
 						}else {
-							u.setWeeklyRank(tmpRank);
+							user.setMonScore(-1);
+							user.setMonDt(new Timestamp(System.currentTimeMillis()));
 						}
+						if(user.getTueDt() != null) {
+							tmpDate = LocalDate.from(user.getTueDt().toLocalDateTime());
+							if(tmpDate.isBefore(minus6Date)){
+								user.setTueScore(-1);
+							}
+						}else {
+							user.setTueScore(-1);
+							user.setTueDt(new Timestamp(System.currentTimeMillis()));
+						}
+						if(user.getWedDt() != null) {
+							tmpDate = LocalDate.from(user.getWedDt().toLocalDateTime());
+							if(tmpDate.isBefore(minus6Date)){
+								user.setWedScore(-1);
+							}
+						}else {
+							user.setWedScore(-1);
+							user.setWedDt(new Timestamp(System.currentTimeMillis()));
+						}
+						if(user.getThuDt() != null) {
+							tmpDate = LocalDate.from(user.getThuDt().toLocalDateTime());
+							if(tmpDate.isBefore(minus6Date)){
+								user.setThuScore(-1);
+							}
+						}else {
+							user.setThuScore(-1);
+							user.setThuDt(new Timestamp(System.currentTimeMillis()));
+						}
+						if(user.getFriDt() != null) {
+							tmpDate = LocalDate.from(user.getFriDt().toLocalDateTime());
+							if(tmpDate.isBefore(minus6Date)){
+								user.setFriScore(-1);
+							}
+						}else {
+							user.setFriScore(-1);
+							user.setFriDt(new Timestamp(System.currentTimeMillis()));
+						}
+						if(user.getSurDt() != null) {
+							tmpDate = LocalDate.from(user.getSurDt().toLocalDateTime());
+							if(tmpDate.isBefore(minus6Date)){
+								user.setSurScore(-1);
+							}
+						}else {
+							user.setSurScore(-1);
+							user.setSurDt(new Timestamp(System.currentTimeMillis()));
+						}
+						if(user.getSunDt() != null) {
+							tmpDate = LocalDate.from(user.getSunDt().toLocalDateTime());
+							if(tmpDate.isBefore(minus6Date)){
+								user.setSunScore(-1);
+							}
+						}else {
+							user.setSunScore(-1);
+							user.setSunDt(new Timestamp(System.currentTimeMillis()));
+						}
+						// ユーザーの週間最大スコア取得
+						weeklyMaxScore = IntStream.of(user.getMonScore(),user.getTueScore(),
+													  user.getWedScore(),user.getThuScore(),
+													  user.getFriScore(),user.getSurScore(),
+													  user.getSunScore())
+										 .max()
+										 .getAsInt();
+						/*
+						 * weeklyMaxScore == -1 → 1週間以上ログインしていない、
+						 * もしくは該当する曜日の採点が初めて、のいずれか
+						 * その場合はweeklyUpddt、weeklymaxscoreをnullにする
+						 */
+						if(weeklyMaxScore == -1) {
+							// weeklyUpddt、weeklymaxscoreをnullにする処理
+							ps2.setString(1, user.getId());
+							ps2.executeUpdate();
+							// ユーザーオブジェクトのデータを無効化
+							user.setWeeklyMaxScore(null);
+						}else {
+							Map<Integer,Timestamp> map = new HashMap<>();
+							map.put(user.getMonScore(), user.getMonDt());
+							map.put(user.getTueScore(), user.getTueDt());
+							map.put(user.getWedScore(), user.getWedDt());
+							map.put(user.getThuScore(), user.getThuDt());
+							map.put(user.getFriScore(), user.getFriDt());
+							map.put(user.getSurScore(), user.getSurDt());
+							map.put(user.getSunScore(), user.getSunDt());
+							Map.Entry<Integer, Timestamp> entry;
+							entry = map.entrySet().stream()
+												   .sorted(Map.Entry.<Integer,Timestamp>comparingByKey()
+														   .thenComparing(Map.Entry.comparingByValue()))
+												   .collect(Collectors.toList())
+												   .get(6);
+							/*
+							 *  このリストのインデックス6(最新日付)をweeklyupddt、
+							 *  スコアをweeklymaxscoreとして格納する
+							 */
+							ps3.setTimestamp(1, entry.getValue());
+							ps3.setInt(2, weeklyMaxScore);
+							ps3.setString(3, user.getId());
+							ps3.executeUpdate();
+							// ユーザーオブジェクトのデータを格納
+							user.setWeeklyMaxScore(weeklyMaxScore);
+							user.setWeeklyUpdDt(entry.getValue());
+							}
 					}
-					return uList;
-				}catch(SQLException e) {
-					e.printStackTrace();
-					return null;
+					// 1週間以内のデータがない場合は除外
+					if(user.getWeeklyMaxScore()==null) {
+						continue;
+					}
+					uList.add(user);
+			}
+			// 順位用一時変数
+			int tmpRank = 0;
+			// 一時スコア変数
+			int tmpScore = 11;
+			// ユーザーリストをスコアの降順の後ユーザー名の昇順にする
+			uList = uList.stream()
+						  .sorted(Comparator.comparing(User::getWeeklyMaxScore)
+								  .reversed()
+								  .thenComparing(User::getUserName))
+						  .collect(Collectors.toList());
+			// 順位格納処理
+			for(User u:uList) {
+				if(tmpScore > u.getWeeklyMaxScore()) {
+					tmpScore = u.getWeeklyMaxScore();
+					u.setWeeklyRank(++tmpRank);
+				}else {
+					u.setWeeklyRank(tmpRank);
 				}
 			}
+			return uList;
+		}catch(SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 	//日間ランキングユーザー取得
-			public List<User> getDailyUsers() {
-				try(Connection con = ConnectionGetter.getConnection();
-					PreparedStatement ps = con.prepareStatement(DAILYSELECT)){
-					//ランキング一覧用のリスト
-					List<User> dailyUserList = new ArrayList<>();
-					//リスト格納用のユーザーオブジェクト
-					User user = null;
-					//日間ランキング用現在日付取得
-					String now = LocalDate.now().toString();
-					ps.setString(1, now);
-					ResultSet rs = ps.executeQuery();
+	public List<User> getDailyUsers() {
+		try(Connection con = ConnectionGetter.getConnection();
+			PreparedStatement ps = con.prepareStatement(DAILYSELECT)){
+			//ランキング一覧用のリスト
+			List<User> dailyUserList = new ArrayList<>();
+			//リスト格納用のユーザーオブジェクト
+			User user = null;
+			//日間ランキング用現在日付取得
+			String now = LocalDate.now().toString();
+			ps.setString(1, now);
+			ResultSet rs = ps.executeQuery();
 
-					while(rs.next()) {
-						user = new User(rs.getString("id")
-								       ,rs.getString("password")
-								       ,rs.getString("name")
-								       ,rs.getInt("weeklymaxscore")
-								       ,rs.getInt("dailymaxscore")
-								       ,rs.getInt("monscore")
-								       ,rs.getTimestamp("mondt")
-								       ,rs.getInt("tuescore")
-								       ,rs.getTimestamp("tuedt")
-								       ,rs.getInt("wedscore")
-								       ,rs.getTimestamp("weddt")
-								       ,rs.getInt("thuscore")
-								       ,rs.getTimestamp("thudt")
-								       ,rs.getInt("friscore")
-								       ,rs.getTimestamp("fridt")
-								       ,rs.getInt("surscore")
-								       ,rs.getTimestamp("surdt")
-								       ,rs.getInt("sunscore")
-								       ,rs.getTimestamp("sundt")
-								       ,rs.getTimestamp("upddt")
-								       ,rs.getTimestamp("weeklyupddt"));
+			while(rs.next()) {
+				user = new User(rs.getString("id")
+						       ,rs.getString("password")
+						       ,rs.getString("name")
+						       ,rs.getInt("weeklymaxscore")
+						       ,rs.getInt("dailymaxscore")
+						       ,rs.getInt("monscore")
+						       ,rs.getTimestamp("mondt")
+						       ,rs.getInt("tuescore")
+						       ,rs.getTimestamp("tuedt")
+						       ,rs.getInt("wedscore")
+						       ,rs.getTimestamp("weddt")
+						       ,rs.getInt("thuscore")
+						       ,rs.getTimestamp("thudt")
+						       ,rs.getInt("friscore")
+						       ,rs.getTimestamp("fridt")
+						       ,rs.getInt("surscore")
+						       ,rs.getTimestamp("surdt")
+						       ,rs.getInt("sunscore")
+						       ,rs.getTimestamp("sundt")
+						       ,rs.getTimestamp("upddt")
+						       ,rs.getTimestamp("weeklyupddt"));
 
-						dailyUserList.add(user);
-					}
-					//日間のスコアの降順(後にユーザー名の昇順)にソートする処理
-					Collections.sort(dailyUserList
-							        ,Comparator.comparing(User::getDailyMaxScore)
-							        .reversed()
-							        .thenComparing(User::getUserName));
-					//ランク抽出処理 tmpRankは0、1、2とカウントアップ
-					//tmpScore(スコア)が下がるにつれ、tmpRank(順位)は増える
-					int tmpRank = 0;
-					int tmpScore = 11;
+				dailyUserList.add(user);
+			}
+			//日間のスコアの降順(後にユーザー名の昇順)にソートする処理
+			Collections.sort(dailyUserList
+					        ,Comparator.comparing(User::getDailyMaxScore)
+					        .reversed()
+					        .thenComparing(User::getUserName));
+			//ランク抽出処理 tmpRankは0、1、2とカウントアップ
+			//tmpScore(スコア)が下がるにつれ、tmpRank(順位)は増える
+			int tmpRank = 0;
+			int tmpScore = 11;
 
-					for(User u:dailyUserList) {
-						if(u.getDailyMaxScore() < tmpScore) {
-							tmpScore = u.getDailyMaxScore();
-							u.setDailyRank(++tmpRank);
-						}else {
-							u.setDailyRank(tmpRank);
-						}
-					}
-					return dailyUserList;
-				}catch(SQLException e) {
-					e.printStackTrace();
-					return null;
+			for(User u:dailyUserList) {
+				if(u.getDailyMaxScore() < tmpScore) {
+					tmpScore = u.getDailyMaxScore();
+					u.setDailyRank(++tmpRank);
+				}else {
+					u.setDailyRank(tmpRank);
 				}
 			}
+			return dailyUserList;
+		}catch(SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 	//idでユーザー存在チェック
 	public boolean UserExistsById(String id) {
 		try(Connection con = ConnectionGetter.getConnection();
