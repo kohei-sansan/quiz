@@ -27,11 +27,11 @@ public class UserDao {
 	//ログイン時ユーザー取得
 	private static final String USERSELECTBYID = "select * from users where id = ?";
 	//ログインユーザー週間ランキング(順位)取得
-	private static final String WEEKLYRANKSELECT = "select count(distinct weeklymaxscore) "
-	                                              +"from users where weeklymaxscore >= ? ";
+	private static final String WEEKLYRANKSELECT =
+			"select count(distinct weeklymaxscore) from users where weeklymaxscore >= ? ";
 	//ログインユーザー日間ランキング(順位)取得
-	private static final String DAILYRANKSELECT = "select count(distinct dailymaxscore) "
-	                                             +"from users where dailymaxscore >= ? ";
+	private static final String DAILYRANKSELECT =
+			"select count(distinct dailymaxscore) from users where dailymaxscore >= ? ";
 	//週間ランキングユーザー取得
 	private static final String WEEKLYSELECT = "select * from users where weeklyupddt is not null";
 	//日間ランキングユーザー取得
