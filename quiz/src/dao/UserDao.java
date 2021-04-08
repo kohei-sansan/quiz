@@ -40,9 +40,8 @@ public class UserDao {
 	private static final String DAILYMAXSELECT = "select dailymaxscore "
 	                                            +"from users where (to_char(upddt,'YYYY-MM-DD') = ?) and id = ?";
 	// 本日日付＋特定曜日のスコア更新処理
-	private static final String MONDAILYANDDATEUPDATE = "update users "
-	                                                   +"set dailymaxscore = ?,monscore = ?,mondt = now(),upddt = now() "
-	                                                   +"where id = ?";
+	private static final String MONDAILYANDDATEUPDATE = "update users set dailymaxscore = ?,"
+	                                                   +"monscore = ?,mondt = now(),upddt = now() where id = ?";
 	private static final String TUEDAILYANDDATEUPDATE = "update users set dailymaxscore = ?,"
 	                                                   +"tuescore = ?,tuedt = now(),upddt = now() where id = ?";
 	private static final String WEDDAILYANDDATEUPDATE = "update users set dailymaxscore = ?,"
