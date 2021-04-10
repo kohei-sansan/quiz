@@ -775,8 +775,4 @@ public class UserDao {
 				return null;
 			}
 	}
-	// パスワードハッシュ化メソッド
-	public String passToHash(String plainPass) {
-		return "tentative";
-	}
 }
