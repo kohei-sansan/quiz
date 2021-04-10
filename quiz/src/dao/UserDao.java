@@ -727,20 +727,20 @@ public class UserDao {
 										map.put(user.getSunScore(), user.getSunDt());
 										Map.Entry<Integer, Timestamp> entry;
 										entry = map.entrySet().stream()
-															   .reduce((u1,u2)->{
-																   if(u2.getKey()>=u1.getKey()) {
-																	   if(u2.getKey()>u1.getKey()) {
-																		   return u2;
-																	   }
-																	   if(u2.getKey()>=u1.getKey()) {
-																		   if(u2.getValue().compareTo(u1.getValue())>0) {
-																			   return u2;
-																		   }
-																	   }
-																   }
-																   return u1;
-															   })
-															   .get();
+												.reduce((u1,u2)->{
+													if(u2.getKey()>=u1.getKey()) {
+														if(u2.getKey()>u1.getKey()) {
+															return u2;
+														}
+														if(u2.getKey()>=u1.getKey()) {
+															if(u2.getValue().compareTo(u1.getValue())>0) {
+																return u2;
+															}
+														}
+													}
+														return u1;
+												})
+												.get();
 										/*
 										 *  このリストのインデックス6(最新日付)をweeklyupddt、
 										 *  スコアをweeklymaxscoreとして格納する
