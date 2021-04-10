@@ -1,5 +1,8 @@
 package test;
 
+import java.nio.file.Path;
+
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,23 +27,9 @@ import entity.User;
 
 public class Test {
 	public static void main(String[] args) throws Exception{
-		Calendar cal = Calendar.getInstance();
+		Path path = Paths.get(".");
+		String url = path.toAbsolutePath().toString();
 		
-		switch(cal.get(Calendar.DAY_OF_WEEK)) {
-		case Calendar.SUNDAY:
-			System.out.println("sunday");
-		case Calendar.MONDAY:
-			System.out.println("monday");
-		case Calendar.TUESDAY:
-			System.out.println("tuesday");
-		case Calendar.WEDNESDAY:
-			System.out.println("wednesday");
-		case Calendar.THURSDAY:
-			System.out.println("thursday");
-		case Calendar.FRIDAY:
-			System.out.println("friday");
-		case Calendar.SATURDAY:
-			System.out.println("saturday");
-		}
+		System.out.println(url);
 	}
 }

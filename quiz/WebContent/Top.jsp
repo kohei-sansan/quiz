@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <!DOCTYPE html>
 <html>
 <head>
@@ -9,8 +10,7 @@
 </head>
 <body>
   <header>
-  
-  　<div class="wrapper">
+ 　<div class="wrapper">
      <div class="left">
        <h1 class="logo"><img src="pictures/ets-logo.jpg"></h1>
      </div>
@@ -24,7 +24,9 @@
     </div>
     </div>
  </header>
-
+  <c:if test="${logoutFlg == true }">
+     <p>ログアウトしました</p>
+  </c:if>
  <footer></footer>
 </body>
 </html>

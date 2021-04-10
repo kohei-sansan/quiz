@@ -20,6 +20,7 @@
   </c:if>
   <c:if test="${currentUser.dailyMaxScore == null }">
      <p>本日のスコア：N/A </p>
+     <p>全体の順位：N/A</p>
   </c:if>
   <c:if test="${currentUser.weeklyMaxScore != null }">
      <p>1週間以内の最高スコア：${currentUser.weeklyMaxScore }</p>
@@ -27,6 +28,7 @@
   </c:if>
   <c:if test="${currentUser.weeklyMaxScore == null }">
      <p>1週間以内のスコア：N/A </p>
+     <p>全体の順位：N/A</p>
   </c:if>
   <p>マイページ</p>
   <p>ようこそ${sessionScope.currentUser.userName }さん</p>
@@ -36,6 +38,7 @@
   <p><a href="preQuiz.jsp">クイズに挑戦</a></p>
   <p><a href="showDRankServlet">日間ランキング表示</a></p>
   <p><a href="showWRankServlet">週間ランキング表示</a></p>
+  <p><a href="logoutServlet">ログアウト</a></p>
   </div>
 </body>
 </html>

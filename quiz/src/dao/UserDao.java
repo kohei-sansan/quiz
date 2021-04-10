@@ -14,6 +14,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -28,10 +30,10 @@ public class UserDao {
 	private static final String USERSELECTBYID = "select * from users where id = ?";
 	//ログインユーザー週間ランキング(順位)取得
 	private static final String WEEKLYRANKSELECT =
-			"select count(distinct weeklymaxscore) from users where weeklymaxscore >= ? ";
+			"select count(distinct weeklymaxscore) from users where weeklymaxscore >= ?";
 	//ログインユーザー日間ランキング(順位)取得
 	private static final String DAILYRANKSELECT =
-			"select count(distinct dailymaxscore) from users where dailymaxscore >= ? ";
+			"select count(distinct dailymaxscore) from users where dailymaxscore >= ?";
 	//週間ランキングユーザー取得
 	private static final String WEEKLYSELECT = "select * from users where weeklyupddt is not null";
 	//日間ランキングユーザー取得
@@ -128,69 +130,20 @@ public class UserDao {
 						LocalDate minus6Date = LocalDate.now().minusDays(6);
 						LocalDate tmpDate = null;
 						// それぞれの曜日の更新日がnull、又は1週間以上前 → スコアを-1にする
-						if(user.getMonDt() != null) {
-							tmpDate = LocalDate.from(user.getMonDt().toLocalDateTime());
-							if(tmpDate.isBefore(minus6Date)){
-								user.setMonScore(-1);
-							}
-						}else {
-							user.setMonScore(-1);
-							user.setMonDt(new Timestamp(System.currentTimeMillis()));
-						}
-						if(user.getTueDt() != null) {
-							tmpDate = LocalDate.from(user.getTueDt().toLocalDateTime());
-							if(tmpDate.isBefore(minus6Date)){
-								user.setTueScore(-1);
-							}
-						}else {
-							user.setTueScore(-1);
-							user.setTueDt(new Timestamp(System.currentTimeMillis()));
-						}
-						if(user.getWedDt() != null) {
-							tmpDate = LocalDate.from(user.getWedDt().toLocalDateTime());
-							if(tmpDate.isBefore(minus6Date)){
-								user.setWedScore(-1);
-							}
-						}else {
-							user.setWedScore(-1);
-							user.setWedDt(new Timestamp(System.currentTimeMillis()));
-						}
-						if(user.getThuDt() != null) {
-							tmpDate = LocalDate.from(user.getThuDt().toLocalDateTime());
-							if(tmpDate.isBefore(minus6Date)){
-							user.setThuScore(-1);
-							}
-						}else {
-							user.setThuScore(-1);
-							user.setThuDt(new Timestamp(System.currentTimeMillis()));
-						}
-						if(user.getFriDt() != null) {
-							tmpDate = LocalDate.from(user.getFriDt().toLocalDateTime());
-							if(tmpDate.isBefore(minus6Date)){
-								user.setFriScore(-1);
-							}
-						}else {
-							user.setFriScore(-1);
-							user.setFriDt(new Timestamp(System.currentTimeMillis()));
-						}
-						if(user.getSurDt() != null) {
-							tmpDate = LocalDate.from(user.getSurDt().toLocalDateTime());
-							if(tmpDate.isBefore(minus6Date)){
-								user.setSurScore(-1);
-							}
-						}else {
-							user.setSurScore(-1);
-							user.setSurDt(new Timestamp(System.currentTimeMillis()));
-						}
-						if(user.getSunDt() != null) {
-							tmpDate = LocalDate.from(user.getSunDt().toLocalDateTime());
-							if(tmpDate.isBefore(minus6Date)){
-								user.setSunScore(-1);
-							}
-						}else {
-							user.setSunScore(-1);
-							user.setSunDt(new Timestamp(System.currentTimeMillis()));
-						}
+						tmpDate = LocalDate.from(user.getMonDt().toLocalDateTime());
+						if(tmpDate.isBefore(minus6Date)) user.setMonScore(-1);
+						tmpDate = LocalDate.from(user.getTueDt().toLocalDateTime());
+						if(tmpDate.isBefore(minus6Date)) user.setTueScore(-1);
+						tmpDate = LocalDate.from(user.getWedDt().toLocalDateTime());
+						if(tmpDate.isBefore(minus6Date)) user.setWedScore(-1);
+						tmpDate = LocalDate.from(user.getThuDt().toLocalDateTime());
+						if(tmpDate.isBefore(minus6Date)) user.setThuScore(-1);
+						tmpDate = LocalDate.from(user.getFriDt().toLocalDateTime());
+						if(tmpDate.isBefore(minus6Date)) user.setFriScore(-1);
+						tmpDate = LocalDate.from(user.getSurDt().toLocalDateTime());
+						if(tmpDate.isBefore(minus6Date)) user.setSurScore(-1);
+						tmpDate = LocalDate.from(user.getSunDt().toLocalDateTime());
+						if(tmpDate.isBefore(minus6Date)) user.setSunScore(-1);
 						// ユーザーの週間最大スコア取得
 						int weeklyMaxScore = IntStream.of(user.getMonScore(),user.getTueScore(),
 													  user.getWedScore(),user.getThuScore(),
@@ -223,11 +176,22 @@ public class UserDao {
 							map.put(user.getSurScore(), user.getSurDt());
 							map.put(user.getSunScore(), user.getSunDt());
 							Map.Entry<Integer, Timestamp> entry;
+							// スコアが最大、かつ日付が最新の曜日＋スコアの１セットを返す
 							entry = map.entrySet().stream()
-												   .sorted(Map.Entry.<Integer,Timestamp>comparingByKey()
-														   .thenComparing(Map.Entry.comparingByValue()))
-												   .collect(Collectors.toList())
-												   .get(6);
+												   .reduce((Map.Entry<Integer,Timestamp> u1,Map.Entry<Integer,Timestamp>u2)->{
+													   if(u2.getKey()>=u1.getKey()) {
+														   if(u2.getKey()>u1.getKey()) {
+															   return u2;
+														   }
+														   if(u2.getKey()>=u1.getKey()) {
+															   if(u2.getValue().compareTo(u1.getValue())>0) {
+																   return u2;
+															   }
+														   }
+													   }
+													return u1;
+												   })
+												   .get();
 							/*
 							 *  このリストのインデックス6(最大スコアかつ最新日付)のValueをweeklyupddt、
 							 *  Keyをweeklymaxscoreとして格納する
@@ -604,7 +568,6 @@ public class UserDao {
 						// dailymaxscore,特定曜日のmaxscore更新処理
 						// switchで本日の曜日を取得して、該当の曜日のスコアもupdate
 						// 現在曜日格納用変数
-						String date_today = null;
 						Calendar cal = Calendar.getInstance();
 						// 分岐処理のため、ここでPreparedStatement生成
 						PreparedStatement ps2 = null;
@@ -781,7 +744,7 @@ public class UserDao {
 									weeklyMaxScore = rs2.getInt("weeklymaxscore");
 								}
 							}
-							// score > 週間最大スコア(scoreを考慮しない)の場合の処理
+							// 取得score > 週間最大スコアの場合の処理
 							if(score > weeklyMaxScore) {
 								rList.set(0, 2);
 								rList.set(2, weeklyMaxScore);

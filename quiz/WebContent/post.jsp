@@ -5,6 +5,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<link rel="stylesheet" href="/Users/tanakaakirataira/git/リポジトリー/quiz/WebContent/post.css">
 <title>問題登録</title>
 </head>
 <body>
