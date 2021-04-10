@@ -726,6 +726,7 @@ public class UserDao {
 										map.put(user.getSurScore(), user.getSurDt());
 										map.put(user.getSunScore(), user.getSunDt());
 										Map.Entry<Integer, Timestamp> entry;
+										// スコアが最大かつ(スコアが重複した際は)最新日時のセットを取得
 										entry = map.entrySet().stream()
 												.reduce((u1,u2)->{
 													if(u2.getKey()>=u1.getKey()) {
